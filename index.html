@@ -138,8 +138,8 @@
         </div>
     </div>
 
-    <!-- Audio Element (Ganti URL src di bawah ini dengan link lagu MP3 pilihan Anda) -->
-    <audio id="bgMusic" loop preload="auto" src="https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=beautiful-piano-12245.mp3"></audio>
+<!-- Audio Element -->
+    <audio id="bgMusic" loop preload="auto" src="https://files.catbox.moe/31tk54.mp3"></audio>
 
     <!-- Floating Music Controller -->
     <button id="musicToggleBtn" onclick="toggleMusic()" class="fixed bottom-6 right-6 z-50 w-12 h-12 bg-white/90 backdrop-blur-md rounded-full shadow-lg border border-blush-100 flex items-center justify-center text-blush-600 transition-transform hover:scale-110 active:scale-95 focus:outline-none">
@@ -199,7 +199,7 @@
                         <h3 class="font-serif text-3xl font-semibold text-gray-800 mb-2">Susilo Wahyu Utomo</h3>
                         <p class="text-xs text-blush-600 font-medium uppercase tracking-wider mb-2">Mempelai Pria</p>
                         <p class="text-sm text-gray-500 leading-relaxed font-serif">
-                            Putra dari<br>
+                            Putra Pertama dari<br>
                             <span class="font-semibold text-gray-700">Bapak Ahmad Supartono & Ibu Sri Muji Wati</span>
                         </p>
                     </div>
@@ -215,7 +215,7 @@
                         <p class="text-xs text-blush-600 font-medium uppercase tracking-wider mb-2">Mempelai Wanita</p>
                         <p class="text-sm text-gray-500 leading-relaxed font-serif">
                             Putri dari<br>
-                            <span class="font-semibold text-gray-700">Bapak Yusuf Sudarmanto & Ibu Rofiatun </span>
+                            <span class="font-semibold text-gray-700">Bapak Yusuf Sudarmanto & Ibu Rofiatun</span>
                         </p>
                     </div>
                 </div>
@@ -302,7 +302,7 @@
                             <i class="fas fa-home"></i>
                         </div>
                         <h3 class="font-serif text-2xl font-bold text-gray-800 mb-2">Ngunduh Mantu</h3>
-                        <p class="text-blush-600 font-medium text-sm mb-4">Rabu, 28 Oktober 2026</p>
+                        <p class="text-blush-600 font-medium text-sm mb-4">Selasa, 27 Oktober 2026</p>
                         
                         <div class="space-y-3 text-xs text-gray-600 mb-8 font-medium">
                             <p class="flex items-center justify-center gap-2"><i class="far fa-clock text-blush-400"></i> 10:00 WIB - Selesai</p>
@@ -897,5 +897,39 @@ const firebaseConfig = {
       .replace(/'/g, "&#039;");
   }
 </script>
+<script>
+        // Deklarasi variabel
+        const audio = document.getElementById("bgMusic");
+        const musicIcon = document.getElementById("musicIcon");
+        let isMusicPlaying = false;
+
+        // Fungsi untuk membuka undangan dan memutar musik
+        function openInvitation() {
+            // Sembunyikan sampul depan
+            document.getElementById("opening-overlay").classList.add("opened");
+            
+            // Putar musik
+            audio.play().then(() => {
+                isMusicPlaying = true;
+                // Ubah ikon menjadi animasi berputar jika pakai FontAwesome
+                musicIcon.classList.add("fa-spin"); 
+            }).catch((error) => {
+                console.log("Autoplay diblokir oleh browser", error);
+            });
+        }
+
+        // Fungsi untuk tombol melayang (pause/play)
+        function toggleMusic() {
+            if (isMusicPlaying) {
+                audio.pause();
+                musicIcon.classList.remove("fa-spin");
+            } else {
+                audio.play();
+                musicIcon.classList.add("fa-spin");
+            }
+            isMusicPlaying = !isMusicPlaying;
+        }
+    </script>
+</body>
 </body>
 </html>
