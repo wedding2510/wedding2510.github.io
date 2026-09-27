@@ -382,41 +382,165 @@
                 </div>
             </div>
         </section>
+    <!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tanda Kasih - Wedding</title>
     
- <!-- Wedding Gift Section -->
-        <section class="py-24 px-6 bg-light text-center border-t border-gray-300">
-            <div class="max-w-2xl mx-auto reveal">
-                <h2 class="font-serif text-3xl md:text-4xl mb-6 tracking-widest uppercase text-black">Tanda Kasih</h2>
-                <p class="text-gray-600 mb-10 leading-relaxed font-sans text-sm">
+    <!-- Google Fonts: Playfair Display (Serif) & Poppins (Sans-serif) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'wedding-cream': '#FDFBF7',
+                        'wedding-gold': '#D4AF37',
+                        'wedding-gold-light': '#F3E5AB',
+                        'wedding-text': '#4A4A4A',
+                        'wedding-accent': '#C5A880'
+                    },
+                    fontFamily: {
+                        serif: ['"Playfair Display"', 'serif'],
+                        sans: ['Poppins', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Smooth transitions for interactive elements */
+        .card-hover {
+            transition: all 0.4s ease;
+        }
+        .btn-transition {
+            transition: all 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+    <!-- Wedding Gift Section -->
+    <section class="py-24 px-6 bg-wedding-cream text-center border-t border-gray-200">
+        <div class="max-w-4xl mx-auto reveal">
+            <!-- Header Section -->
+            <div class="mb-12">
+                <i class="fa-solid fa-gift text-wedding-accent text-3xl mb-4"></i>
+                <h2 class="font-serif text-3xl md:text-4xl mb-4 tracking-wider uppercase text-gray-800">Tanda Kasih</h2>
+                <div class="w-16 h-px bg-wedding-accent mx-auto mb-6"></div>
+                <p class="text-wedding-text max-w-2xl mx-auto leading-relaxed font-sans text-sm md:text-base font-light">
                     Doa restu Anda merupakan karunia yang sangat berarti bagi kami. Namun, jika Anda hendak memberikan tanda kasih, Anda dapat melalui fitur di bawah ini:
                 </p>
+            </div>
 
-                <!-- Bank Cards container -->
-                <div class="flex flex-col md:flex-row gap-6 justify-center">
-                    <!-- Bank Account -->
-                    <div class="bg-white p-8 border border-black text-left w-full shadow-lg">
-                        <p class="font-serif text-xl tracking-widest mb-4">BRI</p>
-                        <p id="rekening" class="text-2xl font-sans tracking-widest mb-2 text-black">002201049961506</p>
-                        <p class="text-gray-500 uppercase tracking-widest text-xs mb-6 font-sans">A.N. SUSILO WAHYU UTOMO</p>
-                        
-                        <button onclick="copyToClipboard('1234567890', 'rek-btn')" id="rek-btn" class="w-full py-2 border border-black text-xs font-sans tracking-widest uppercase hover:bg-black hover:text-white transition">
-                            Salin Rekening
-                        </button>
+            <!-- Bank Cards container -->
+            <div class="flex flex-col md:flex-row gap-8 justify-center items-stretch">
+                
+                <!-- Bank Account (BRI) -->
+                <div class="card-hover bg-white p-8 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-2 border border-amber-100/50 text-center w-full md:w-1/2 flex flex-col justify-between relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-wedding-accent to-transparent opacity-50"></div>
+                    
+                    <div>
+                        <div class="w-16 h-16 mx-auto bg-gray-50 rounded-full flex items-center justify-center mb-6 shadow-inner">
+                            <i class="fa-solid fa-building-columns text-2xl text-wedding-accent"></i>
+                        </div>
+                        <p class="font-serif text-xl tracking-widest mb-4 text-gray-800 font-semibold">Bank BRI</p>
+                        <p id="rekening" class="text-2xl font-sans tracking-widest mb-2 text-gray-900 font-medium">002201049961506</p>
+                        <p class="text-gray-500 uppercase tracking-widest text-xs mb-8 font-sans">A.N. Susilo Wahyu Utomo</p>
                     </div>
                     
-                    <!-- Digital Wallet -->
-                    <div class="bg-white p-8 border border-black text-left w-full shadow-lg">
-                        <p class="font-serif text-xl tracking-widest mb-4">DANA</p>
-                        <p id="ewallet" class="text-2xl font-sans tracking-widest mb-2 text-black">0895385501900</p>
-                        <p class="text-gray-500 uppercase tracking-widest text-xs mb-6 font-sans">A.N. SUSILO WAHYU UTOMO</p>
-                        
-                        <button onclick="copyToClipboard('081234567890', 'ewallet-btn')" id="ewallet-btn" class="w-full py-2 border border-black text-xs font-sans tracking-widest uppercase hover:bg-black hover:text-white transition">
-                            Salin Nomor
-                        </button>
-                    </div>
+                    <button 
+                        onclick="copyToClipboard('002201049961506', 'rek-btn', 'Salin Rekening')" 
+                        id="rek-btn" 
+                        class="btn-transition w-full py-3 rounded-xl border border-wedding-accent text-sm font-sans tracking-widest uppercase text-wedding-accent hover:bg-wedding-accent hover:text-white flex justify-center items-center gap-2">
+                        <i class="fa-regular fa-copy"></i>
+                        <span>Salin Rekening</span>
+                    </button>
                 </div>
+                
+                <!-- Digital Wallet (DANA) -->
+                <div class="card-hover bg-white p-8 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-2 border border-amber-100/50 text-center w-full md:w-1/2 flex flex-col justify-between relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#118ee0] to-transparent opacity-30"></div>
+                    
+                    <div>
+                        <div class="w-16 h-16 mx-auto bg-gray-50 rounded-full flex items-center justify-center mb-6 shadow-inner">
+                            <i class="fa-solid fa-wallet text-2xl text-[#118ee0]"></i>
+                        </div>
+                        <p class="font-serif text-xl tracking-widest mb-4 text-gray-800 font-semibold">DANA</p>
+                        <p id="ewallet" class="text-2xl font-sans tracking-widest mb-2 text-gray-900 font-medium">0895385501900</p>
+                        <p class="text-gray-500 uppercase tracking-widest text-xs mb-8 font-sans">A.N. Susilo Wahyu Utomo</p>
+                    </div>
+                    
+                    <button 
+                        onclick="copyToClipboard('0895385501900', 'ewallet-btn', 'Salin Nomor')" 
+                        id="ewallet-btn" 
+                        class="btn-transition w-full py-3 rounded-xl border border-[#118ee0] text-sm font-sans tracking-widest uppercase text-[#118ee0] hover:bg-[#118ee0] hover:text-white flex justify-center items-center gap-2">
+                        <i class="fa-regular fa-copy"></i>
+                        <span>Salin Nomor</span>
+                    </button>
+                </div>
+                
             </div>
-        </section>
+        </div>
+    </section>
+
+    <script>
+        function copyToClipboard(textToCopy, buttonId, originalText) {
+            const btn = document.getElementById(buttonId);
+            const span = btn.querySelector('span');
+            const icon = btn.querySelector('i');
+            
+            // Simpan kelas lama untuk dikembalikan nanti
+            const originalClasses = btn.className;
+
+            // Logika fallback menggunakan eksekusi command jika clipboard API gagal (biasanya karena limitasi iFrame)
+            const copyFallback = () => {
+                const textArea = document.createElement("textarea");
+                textArea.value = textToCopy;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                } catch (err) {
+                    console.error('Fallback copy gagal', err);
+                }
+                document.body.removeChild(textArea);
+            };
+
+            // Menyalin Teks
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(textToCopy).catch(copyFallback);
+            } else {
+                copyFallback();
+            }
+
+            // Ubah gaya tombol menjadi Sukses (Hijau Lembut)
+            btn.className = "btn-transition w-full py-3 rounded-xl border border-green-500 bg-green-50 text-sm font-sans tracking-widest uppercase text-green-600 flex justify-center items-center gap-2 shadow-sm";
+            span.innerText = "Berhasil Disalin!";
+            icon.className = "fa-solid fa-check";
+
+            // Kembalikan tombol ke keadaan semula setelah 2 detik
+            setTimeout(() => {
+                btn.className = originalClasses;
+                span.innerText = originalText;
+                icon.className = "fa-regular fa-copy";
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
 
 
         <!-- Guestbook & RSVP Section -->
