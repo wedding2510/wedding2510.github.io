@@ -1,9 +1,9 @@
-<html>
+<!DOCTYPE html>
 <html lang="id" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Undangan Pernikahan - Susilo & Nita</title>
+    <title>Undangan Pernikahan - Susilo & Nita </title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -11,10 +11,192 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Great+Vibes&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Great+Vibes&family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // Your web app's Firebase configuration
+        // Replace this with your actual config!
+    const firebaseConfig = {
+        apiKey: "AIzaSyAV8gfKWuHHrG_7DzhpWgWcXyHYB_mIBBU",
+        authDomain: "undangan-susilo.firebaseapp.com",
+        projectId: "undangan-susilo",
+        storageBucket: "undangan-susilo.firebasestorage.app",
+        messagingSenderId: "532000981878",
+        appId: "1:532000981878:web:d4b4c1c46edc8cf5bff057",
+        measurementId: "G-V9BD4RPLXJ"
+    };
+
+        // Initialize Firebase
+        let app, db;
+        
+        // Prevent connection attempts if using default placeholder config
+        if (firebaseConfig.apiKey === "YOUR_API_KEY") {
+            console.warn("Firebase config is using placeholders. Running in Demo Mode.");
+            document.addEventListener('DOMContentLoaded', () => {
+                const feedback = document.getElementById('formFeedback');
+                if(feedback) {
+                    feedback.classList.remove('hidden');
+                    feedback.classList.add('bg-yellow-100', 'text-yellow-700');
+                    feedback.innerText = "Mode Demo: Silakan masukkan konfigurasi Firebase Anda pada source code untuk menyimpan ucapan.";
+                }
+            });
+        } else {
+            try {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                console.log("Firebase initialized successfully");
+            } catch (error) {
+                console.error("Firebase initialization error:", error);
+            }
+        }
+
+        // Make functions globally available
+        window.submitGuestbookForm = async function(e) {
+            e.preventDefault();
+            
+            if(!db) {
+                // Fallback to demo mode gracefully
+                if(typeof submitForm === 'function') {
+                    submitForm(e);
+                }
+                return;
+            }
+
+            const btn = document.getElementById('submitBtn');
+            const feedback = document.getElementById('formFeedback');
+            
+            const name = document.getElementById('guestNameInput').value;
+            const attendance = document.getElementById('attendanceInput').value;
+            const message = document.getElementById('messageInput').value;
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Mengirim...';
+            
+            try {
+                // Add a new document with a generated id.
+                const docRef = await addDoc(collection(db, "guestbook"), {
+                    name: name,
+                    attendance: attendance,
+                    message: message,
+                    timestamp: serverTimestamp()
+                });
+                console.log("Document written with ID: ", docRef.id);
+                
+                // Show success feedback
+                btn.classList.replace('from-blush-500', 'from-green-500');
+                btn.classList.replace('to-blush-600', 'to-green-600');
+                btn.innerHTML = '<i class="fas fa-check"></i> Terkirim';
+                
+                feedback.classList.remove('hidden', 'bg-red-100', 'text-red-600');
+                feedback.classList.add('bg-green-100', 'text-green-700');
+                feedback.innerText = "Terima kasih atas ucapan dan doanya!";
+                
+                document.getElementById('guestbookForm').reset();
+                
+                // Refresh the messages list
+                loadMessages();
+                
+                // Reset button after 3 seconds
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.classList.replace('from-green-500', 'from-blush-500');
+                    btn.classList.replace('to-green-600', 'to-blush-600');
+                    btn.innerHTML = 'Kirim Ucapan';
+                    feedback.classList.add('hidden');
+                }, 3000);
+
+            } catch (error) {
+                console.error("Error adding document: ", error);
+                btn.disabled = false;
+                btn.innerHTML = 'Kirim Ucapan';
+                
+                feedback.classList.remove('hidden', 'bg-green-100', 'text-green-700');
+                feedback.classList.add('bg-red-100', 'text-red-700');
+                feedback.innerText = "Gagal mengirim ucapan. Silakan coba lagi.";
+            }
+        };
+
+        window.loadMessages = async function() {
+            const messagesContainer = document.getElementById('messagesContainer');
+            if(!messagesContainer) return;
+
+            if(!db) {
+                // Show demo messages if Firebase is not configured
+                messagesContainer.innerHTML = `
+                    <div class="bg-white p-4 rounded-2xl border border-blush-100 shadow-sm mb-3">
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-semibold text-gray-800 text-sm">Tamu Demo</h4>
+                            <span class="text-[10px] px-2 py-1 rounded-full font-medium bg-green-100 text-green-700">Hadir</span>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-2 font-serif italic">"Selamat menempuh hidup baru! Semoga samawa. (Pesan ini adalah demo)"</p>
+                        <span class="text-[10px] text-gray-400 block text-right">Hari ini</span>
+                    </div>
+                `;
+                return;
+            }
+            
+            try {
+                const q = query(collection(db, "guestbook"), orderBy("timestamp", "desc"));
+                const querySnapshot = await getDocs(q);
+                
+                if(querySnapshot.empty) {
+                    messagesContainer.innerHTML = '<p class="text-center text-sm text-gray-500 py-4">Belum ada ucapan. Jadilah yang pertama!</p>';
+                    return;
+                }
+                
+                messagesContainer.innerHTML = ''; // Clear existing
+                
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    
+                    // Format date (handle potential null timestamp initially)
+                    let dateStr = "";
+                    if (data.timestamp) {
+                        const date = data.timestamp.toDate();
+                        dateStr = date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+                    }
+                    
+                    // Determine attendance badge color
+                    let badgeClass = "bg-gray-100 text-gray-600";
+                    if (data.attendance === "Hadir") badgeClass = "bg-green-100 text-green-700";
+                    else if (data.attendance === "Tidak Hadir") badgeClass = "bg-red-100 text-red-700";
+                    else if (data.attendance === "Masih Ragu") badgeClass = "bg-yellow-100 text-yellow-700";
+
+                    const messageHTML = `
+                        <div class="bg-white p-4 rounded-2xl border border-blush-100 shadow-sm mb-3">
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="font-semibold text-gray-800 text-sm">${data.name}</h4>
+                                <span class="text-[10px] px-2 py-1 rounded-full font-medium ${badgeClass}">${data.attendance}</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-2 font-serif italic">"${data.message}"</p>
+                            <span class="text-[10px] text-gray-400 block text-right">${dateStr}</span>
+                        </div>
+                    `;
+                    messagesContainer.insertAdjacentHTML('beforeend', messageHTML);
+                });
+            } catch (error) {
+                console.error("Error loading messages: ", error);
+                messagesContainer.innerHTML = '<p class="text-center text-sm text-red-500 py-4">Gagal memuat ucapan.</p>';
+            }
+        };
+
+        // Load messages when the page loads
+        window.addEventListener('DOMContentLoaded', () => {
+            // Need a slight delay to ensure Firebase initializes completely
+            setTimeout(() => {
+                if(typeof window.loadMessages === 'function') {
+                    window.loadMessages();
+                }
+            }, 500);
+        });
+    </script>
 
     <script>
         tailwind.config = {
@@ -22,22 +204,22 @@
                 extend: {
                     colors: {
                         blush: {
-                            50: '#fdf8f8',
-                            100: '#f9ebeb',
-                            200: '#f4d6d6',
-                            300: '#ebb8b8',
-                            400: '#df9292',
-                            500: '#d06e6e',
-                            600: '#ba5050',
-                            700: '#9c4040',
-                            800: '#823737',
-                            900: '#6c3131',
-                        }
+                            50: '#fdf8f8', 100: '#f9ebeb', 200: '#f4d6d6',
+                            300: '#ebb8b8', 400: '#df9292', 500: '#d06e6e',
+                            600: '#ba5050', 700: '#9c4040', 800: '#823737', 900: '#6c3131',
+                        },
+                        'wedding-cream': '#FDFBF7',
+                        'wedding-gold': '#D4AF37',
+                        'wedding-gold-light': '#F3E5AB',
+                        'wedding-text': '#4A4A4A',
+                        'wedding-accent': '#C5A880'
                     },
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
                         serif: ['Cormorant Garamond', 'serif'],
                         script: ['Great Vibes', 'cursive'],
+                        poppins: ['Poppins', 'sans-serif'],
+                        playfair: ['"Playfair Display"', 'serif'],
                     },
                     animation: {
                         'spin-slow': 'spin 4s linear infinite',
@@ -108,9 +290,14 @@
             transform: scale(1);
         }
 
-        /* Modal Image Viewer */
-        .modal-enter { opacity: 0; transform: scale(0.9); }
-        .modal-enter-active { opacity: 1; transform: scale(1); transition: all 0.3s ease-out; }
+        /* Lightbox */
+        #lightbox {
+            transition: opacity 0.3s ease;
+        }
+
+        /* Smooth transitions for interactive elements */
+        .card-hover { transition: all 0.4s ease; }
+        .btn-transition { transition: all 0.3s ease-in-out; }
     </style>
 </head>
 <body class="bg-blush-50 text-gray-800 antialiased selection:bg-blush-200 selection:text-blush-900">
@@ -119,14 +306,14 @@
     <div id="opening-overlay" class="fixed inset-0 w-full h-full flex flex-col items-center justify-center bg-white z-[9999]">
         <!-- Background Image for Cover -->
         <div class="absolute inset-0 w-full h-full object-cover">
-            <img src="https://drive.google.com/thumbnail?id=1VwFOvOQ836LGxtLfAwJI6BlktDFdu3ZP&sz=w1000" class="w-full h-full object-cover animate-ken-burns" alt="Cover Background">
+            <img src="https://drive.google.com/thumbnail?id=1VwFOvOQ836LGxtLfAwJI6BlktDFdu3ZP&sz=w1000" class="w-full h-full object-cover animate-ken-burns" alt="Cover Background" onerror="this.src='https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=1000'">
             <div class="absolute inset-0 hero-overlay"></div>
         </div>
 
         <div class="relative z-10 text-center px-6 flex flex-col items-center max-w-md w-full">
             <span class="text-xs font-semibold tracking-[0.3em] uppercase text-blush-600 mb-4 block">The Wedding Of</span>
             <h1 class="font-script text-6xl text-blush-800 mb-2">Susilo & Nita</h1>
-            <p class="font-serif italic text-gray-600 mb-8 text-sm">Selasa, 27 Oktober 2026</p>
+            <p class="font-serif italic text-gray-600 mb-8 text-sm">Minggu, 25 Oktober 2026</p>
             
             <p class="text-xs text-gray-500 mb-6 uppercase tracking-widest font-medium">Kepada Yth. Bapak/Ibu/Saudara/i</p>
             
@@ -138,21 +325,27 @@
         </div>
     </div>
 
-<!-- Audio Element -->
+    <!-- Audio Element -->
     <audio id="bgMusic" loop preload="auto" src="https://files.catbox.moe/31tk54.mp3"></audio>
 
-    <!-- Floating Music Controller -->
-    <button id="musicToggleBtn" onclick="toggleMusic()" class="fixed bottom-6 right-6 z-50 w-12 h-12 bg-white/90 backdrop-blur-md rounded-full shadow-lg border border-blush-100 flex items-center justify-center text-blush-600 transition-transform hover:scale-110 active:scale-95 focus:outline-none">
-        <i id="musicIcon" class="fas fa-music"></i>
-    </button>
+    <!-- Floating Controllers -->
+    <div class="fixed bottom-6 right-6 z-50 flex flex-col gap-3">
+        <!-- Auto Scroll Toggle -->
+        <button id="scrollToggleBtn" onclick="toggleAutoScroll()" class="w-12 h-12 bg-white/90 backdrop-blur-md rounded-full shadow-lg border border-blush-100 flex items-center justify-center text-blush-600 transition-transform hover:scale-110 active:scale-95 focus:outline-none" title="Play/Pause Auto Scroll">
+            <i id="scrollIcon" class="fas fa-play"></i>
+        </button>
+        <!-- Music Toggle -->
+        <button id="musicToggleBtn" onclick="toggleMusic()" class="w-12 h-12 bg-white/90 backdrop-blur-md rounded-full shadow-lg border border-blush-100 flex items-center justify-center text-blush-600 transition-transform hover:scale-110 active:scale-95 focus:outline-none">
+            <i id="musicIcon" class="fas fa-music"></i>
+        </button>
+    </div>
 
     <main id="main-content" class="min-h-screen">
         
         <!-- Hero Section -->
         <section class="relative min-h-[100svh] flex flex-col items-center justify-center overflow-hidden">
-            <!-- Ken Burns Background -->
             <div class="absolute inset-0 z-0">
-                <img src="https://drive.google.com/thumbnail?id=1VwFOvOQ836LGxtLfAwJI6BlktDFdu3ZP&sz=w1200" alt="Background" class="w-full h-full object-cover animate-ken-burns origin-center opacity-90">
+                <img src="https://drive.google.com/thumbnail?id=1VwFOvOQ836LGxtLfAwJI6BlktDFdu3ZP&sz=w1200" alt="Background" onerror="this.src='https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=1200'" class="w-full h-full object-cover animate-ken-burns origin-center opacity-90">
                 <div class="absolute inset-0 bg-gradient-to-b from-white/60 via-white/40 to-white"></div>
             </div>
 
@@ -160,11 +353,10 @@
                 <div class="reveal">
                     <span class="text-xs uppercase tracking-[0.25em] text-blush-700 font-semibold mb-3 block">Pernikahan Kami</span>
                     <h1 class="font-script text-7xl sm:text-8xl text-blush-800 drop-shadow-sm mb-2">Susilo & Nita</h1>
-                    <p class="font-serif italic text-gray-700 text-lg mt-4">27 . 10 . 2026</p>
+                    <p class="font-serif italic text-gray-700 text-lg mt-4">25 . 10 . 2026</p>
                 </div>
             </div>
 
-            <!-- Scroll Indicator -->
             <div class="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-bounce opacity-70">
                 <span class="text-[10px] uppercase tracking-widest text-blush-800 font-semibold">Scroll</span>
                 <i class="fas fa-chevron-down text-blush-600 text-sm"></i>
@@ -173,7 +365,6 @@
 
         <!-- Profile Section -->
         <section class="py-24 px-6 bg-white relative">
-            <!-- Decorative element -->
             <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 text-blush-200 text-4xl opacity-50">
                 <i class="fas fa-leaf"></i>
             </div>
@@ -186,30 +377,29 @@
                     </p>
                 </div>
 
-                <!-- Single Hero Image for Couple -->
                 <div class="mb-16 reveal-scale flex justify-center">
                     <div class="relative w-64 h-80 sm:w-80 sm:h-96 rounded-t-full rounded-b-3xl overflow-hidden shadow-2xl shadow-blush-200/50 border-4 border-white">
-                        <img src="https://drive.google.com/thumbnail?id=1Vq6K9gY5bPNrc-zofIGstiAuDe4gmAu8&sz=w800" alt="Susilo dan Nita" class="w-full h-full object-cover">
+                        <img src="https://drive.google.com/thumbnail?id=1Vq6K9gY5bPNrc-zofIGstiAuDe4gmAu8&sz=w800" alt="Susilo dan Nita" onerror="this.src='https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&q=80&w=800'" class="w-full h-full object-cover">
                     </div>
                 </div>
 
                 <div class="flex flex-col md:flex-row items-center justify-center gap-10 md:gap-20 relative">
-                    <!-- Groom -->
+                    <!-- Bride -->
                     <div class="reveal text-center w-full md:w-1/2 flex flex-col items-center">
-                        <h3 class="font-serif text-3xl font-semibold text-gray-800 mb-2">Susilo Wahyu Utomo</h3>
+                        <h3 class="font-serif text-3xl font-semibold text-gray-800 mb-2">Susilo Wahyu utomo</h3>
                         <p class="text-xs text-blush-600 font-medium uppercase tracking-wider mb-2">Mempelai Pria</p>
                         <p class="text-sm text-gray-500 leading-relaxed font-serif">
                             Putra dari<br>
-                            <span class="font-semibold text-gray-700">Bapak Ahmad Supartono & Ibu Sri Muji Wati</span>
+                            <span class="font-semibold text-gray-700">Bapak Ahmad Supartono & Ibu Sri Muji wati</span>
                         </p>
                     </div>
 
-                    <!-- Divider (Desktop & Mobile) -->
+                    <!-- Divider -->
                     <div class="text-blush-300 text-3xl md:text-5xl font-script animate-pulse-slow reveal">
                         &
                     </div>
 
-                    <!-- Bride -->
+                    <!-- Groom -->
                     <div class="reveal text-center w-full md:w-1/2 flex flex-col items-center">
                         <h3 class="font-serif text-3xl font-semibold text-gray-800 mb-2">Nita Natasya Angelina</h3>
                         <p class="text-xs text-blush-600 font-medium uppercase tracking-wider mb-2">Mempelai Wanita</p>
@@ -245,7 +435,7 @@
                     <h2 class="font-script text-5xl sm:text-6xl text-blush-800 mt-1">Jadwal Pernikahan</h2>
                 </div>
 
-                <div class="grid md:grid-cols-3 gap-8">
+                <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
                     <!-- Akad Nikah -->
                     <div class="glass-card rounded-3xl p-8 border border-blush-100 shadow-lg shadow-blush-100/50 text-center relative overflow-hidden group reveal-scale">
                         <div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-blush-100 to-transparent rounded-bl-full -z-10 transition-transform group-hover:scale-125"></div>
@@ -297,13 +487,11 @@
                     <!-- Ngunduh Mantu -->
                     <div class="glass-card rounded-3xl p-8 border border-blush-100 shadow-lg shadow-blush-100/50 text-center relative overflow-hidden group reveal-scale" style="transition-delay: 200ms;">
                         <div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-blush-100 to-transparent rounded-bl-full -z-10 transition-transform group-hover:scale-125"></div>
-                        
                         <div class="w-16 h-16 bg-blush-50 rounded-full flex items-center justify-center mx-auto mb-6 text-blush-600 text-2xl shadow-inner border border-white">
                             <i class="fas fa-home"></i>
                         </div>
                         <h3 class="font-serif text-2xl font-bold text-gray-800 mb-2">Ngunduh Mantu</h3>
                         <p class="text-blush-600 font-medium text-sm mb-4">Selasa, 27 Oktober 2026</p>
-                        
                         <div class="space-y-3 text-xs text-gray-600 mb-8 font-medium">
                             <p class="flex items-center justify-center gap-2"><i class="far fa-clock text-blush-400"></i> 10:00 WIB - Selesai</p>
                             <p class="flex flex-col items-center gap-1">
@@ -312,7 +500,6 @@
                                 <span>Desa Pelang 02/02, Mayong, Jepara</span>
                             </p>
                         </div>
-
                         <a href="https://goo.gl/maps/GkvLwpB5cCqaYo7B6" target="_blank" class="inline-flex items-center justify-center w-full py-3 px-4 bg-gray-900 text-white text-xs font-semibold rounded-xl hover:bg-blush-700 transition-colors gap-2">
                             <i class="fas fa-location-arrow"></i> Buka Google Maps
                         </a>
@@ -323,11 +510,10 @@
                 <div class="mt-20 pt-16 border-t border-blush-100 reveal text-center">
                     <h3 class="text-sm uppercase tracking-[0.2em] text-blush-600 font-semibold mb-8">Menuju Hari Bahagia</h3>
                     <div class="flex justify-center gap-3 sm:gap-6" id="countdown">
-                        <!-- Filled via JS -->
-                        <div class="flex flex-col items-center w-16 sm:w-20"><div class="text-2xl sm:text-4xl font-serif font-bold text-gray-800 bg-blush-50 w-full rounded-2xl py-3 shadow-inner">00</div><span class="text-[10px] sm:text-xs uppercase mt-2 font-medium text-gray-500">Hari</span></div>
-                        <div class="flex flex-col items-center w-16 sm:w-20"><div class="text-2xl sm:text-4xl font-serif font-bold text-gray-800 bg-blush-50 w-full rounded-2xl py-3 shadow-inner">00</div><span class="text-[10px] sm:text-xs uppercase mt-2 font-medium text-gray-500">Jam</span></div>
-                        <div class="flex flex-col items-center w-16 sm:w-20"><div class="text-2xl sm:text-4xl font-serif font-bold text-gray-800 bg-blush-50 w-full rounded-2xl py-3 shadow-inner">00</div><span class="text-[10px] sm:text-xs uppercase mt-2 font-medium text-gray-500">Menit</span></div>
-                        <div class="flex flex-col items-center w-16 sm:w-20"><div class="text-2xl sm:text-4xl font-serif font-bold text-gray-800 bg-blush-50 w-full rounded-2xl py-3 shadow-inner">00</div><span class="text-[10px] sm:text-xs uppercase mt-2 font-medium text-gray-500">Detik</span></div>
+                        <div class="flex flex-col items-center w-16 sm:w-20"><div id="days" class="text-2xl sm:text-4xl font-serif font-bold text-gray-800 bg-blush-50 w-full rounded-2xl py-3 shadow-inner">00</div><span class="text-[10px] sm:text-xs uppercase mt-2 font-medium text-gray-500">Hari</span></div>
+                        <div class="flex flex-col items-center w-16 sm:w-20"><div id="hours" class="text-2xl sm:text-4xl font-serif font-bold text-gray-800 bg-blush-50 w-full rounded-2xl py-3 shadow-inner">00</div><span class="text-[10px] sm:text-xs uppercase mt-2 font-medium text-gray-500">Jam</span></div>
+                        <div class="flex flex-col items-center w-16 sm:w-20"><div id="minutes" class="text-2xl sm:text-4xl font-serif font-bold text-gray-800 bg-blush-50 w-full rounded-2xl py-3 shadow-inner">00</div><span class="text-[10px] sm:text-xs uppercase mt-2 font-medium text-gray-500">Menit</span></div>
+                        <div class="flex flex-col items-center w-16 sm:w-20"><div id="seconds" class="text-2xl sm:text-4xl font-serif font-bold text-gray-800 bg-blush-50 w-full rounded-2xl py-3 shadow-inner">00</div><span class="text-[10px] sm:text-xs uppercase mt-2 font-medium text-gray-500">Detik</span></div>
                     </div>
                 </div>
             </div>
@@ -347,7 +533,7 @@
                     <!-- Photo 1 -->
                     <div class="col-span-2 md:col-span-2 row-span-2 rounded-2xl overflow-hidden reveal-scale cursor-pointer group" onclick="openLightbox('https://drive.google.com/thumbnail?id=1VwFOvOQ836LGxtLfAwJI6BlktDFdu3ZP&sz=w1200')">
                         <div class="w-full h-full aspect-[4/3] md:aspect-auto md:h-full relative">
-                            <img src="https://drive.google.com/thumbnail?id=1VwFOvOQ836LGxtLfAwJI6BlktDFdu3ZP&sz=w800" alt="Gallery 1" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 group-hover:rotate-1">
+                            <img src="https://drive.google.com/thumbnail?id=1VwFOvOQ836LGxtLfAwJI6BlktDFdu3ZP&sz=w800" onerror="this.src='https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=800'" alt="Gallery 1" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 group-hover:rotate-1">
                             <div class="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors duration-300"></div>
                         </div>
                     </div>
@@ -355,193 +541,69 @@
                     <!-- Photo 2 -->
                     <div class="rounded-2xl overflow-hidden reveal-scale cursor-pointer group" style="transition-delay: 100ms;" onclick="openLightbox('https://drive.google.com/thumbnail?id=1Vw-9VBlwI9oJsebyOIhrkchvz1_XEKkz&sz=w1000')">
                         <div class="w-full aspect-square relative">
-                            <img src="https://drive.google.com/thumbnail?id=1Vw-9VBlwI9oJsebyOIhrkchvz1_XEKkz&sz=w600" alt="Gallery 2" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                            <img src="https://drive.google.com/thumbnail?id=1Vw-9VBlwI9oJsebyOIhrkchvz1_XEKkz&sz=w600" onerror="this.src='https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&q=80&w=600'" alt="Gallery 2" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
                         </div>
                     </div>
 
                     <!-- Photo 3 -->
                     <div class="rounded-2xl overflow-hidden reveal-scale cursor-pointer group" style="transition-delay: 200ms;" onclick="openLightbox('https://drive.google.com/thumbnail?id=1VuDsocRuCrQ1E2E4Mrxdk4tjKTlln096&sz=w1000')">
                         <div class="w-full aspect-square relative">
-                            <img src="https://drive.google.com/thumbnail?id=1VuDsocRuCrQ1E2E4Mrxdk4tjKTlln096&sz=w600" alt="Gallery 3" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                            <img src="https://drive.google.com/thumbnail?id=1VuDsocRuCrQ1E2E4Mrxdk4tjKTlln096&sz=w600" onerror="this.src='https://images.unsplash.com/photo-1520854221256-17451cc331bf?auto=format&fit=crop&q=80&w=600'" alt="Gallery 3" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
                         </div>
                     </div>
 
                     <!-- Photo 4 -->
                     <div class="rounded-2xl overflow-hidden reveal-scale cursor-pointer group" style="transition-delay: 300ms;" onclick="openLightbox('https://drive.google.com/thumbnail?id=1Vq6K9gY5bPNrc-zofIGstiAuDe4gmAu8&sz=w1000')">
                         <div class="w-full aspect-square relative">
-                            <img src="https://drive.google.com/thumbnail?id=1Vq6K9gY5bPNrc-zofIGstiAuDe4gmAu8&sz=w600" alt="Gallery 4" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                            <img src="https://drive.google.com/thumbnail?id=1Vq6K9gY5bPNrc-zofIGstiAuDe4gmAu8&sz=w600" onerror="this.src='https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&q=80&w=600'" alt="Gallery 4" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
                         </div>
                     </div>
 
                     <!-- Photo 5 -->
                     <div class="rounded-2xl overflow-hidden reveal-scale cursor-pointer group" style="transition-delay: 400ms;" onclick="openLightbox('https://drive.google.com/thumbnail?id=1Vq1lvfpFloNo6HR_8fRJYU9PikoRKAKw&sz=w1000')">
                         <div class="w-full aspect-square relative">
-                            <img src="https://drive.google.com/thumbnail?id=1Vq1lvfpFloNo6HR_8fRJYU9PikoRKAKw&sz=w600" alt="Gallery 5" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                            <img src="https://drive.google.com/thumbnail?id=1Vq1lvfpFloNo6HR_8fRJYU9PikoRKAKw&sz=w600" onerror="this.src='https://images.unsplash.com/photo-1469371670807-013ccf25f16a?auto=format&fit=crop&q=80&w=600'" alt="Gallery 5" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
                         </div>
                     </div>
                 </div>
             </div>
         </section>
-    <!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tanda Kasih - Wedding</title>
-    
-    <!-- Google Fonts: Playfair Display (Serif) & Poppins (Sans-serif) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-    
-    <!-- FontAwesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'wedding-cream': '#FDFBF7',
-                        'wedding-gold': '#D4AF37',
-                        'wedding-gold-light': '#F3E5AB',
-                        'wedding-text': '#4A4A4A',
-                        'wedding-accent': '#C5A880'
-                    },
-                    fontFamily: {
-                        serif: ['"Playfair Display"', 'serif'],
-                        sans: ['Poppins', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
 
-    <style>
-        /* Smooth transitions for interactive elements */
-        .card-hover {
-            transition: all 0.4s ease;
-        }
-        .btn-transition {
-            transition: all 0.3s ease-in-out;
-        }
-    </style>
-</head>
-<body class="bg-gray-50">
-
-    <!-- Wedding Gift Section -->
-    <section class="py-24 px-6 bg-wedding-cream text-center border-t border-gray-200">
-        <div class="max-w-4xl mx-auto reveal">
-            <!-- Header Section -->
-            <div class="mb-12">
-                <i class="fa-solid fa-gift text-wedding-accent text-3xl mb-4"></i>
-                <h2 class="font-serif text-3xl md:text-4xl mb-4 tracking-wider uppercase text-gray-800">Tanda Kasih</h2>
-                <div class="w-16 h-px bg-wedding-accent mx-auto mb-6"></div>
-                <p class="text-wedding-text max-w-2xl mx-auto leading-relaxed font-sans text-sm md:text-base font-light">
-                    Doa restu Anda merupakan karunia yang sangat berarti bagi kami. Namun, jika Anda hendak memberikan tanda kasih, Anda dapat melalui fitur di bawah ini:
-                </p>
-            </div>
-
-            <!-- Bank Cards container -->
-            <div class="flex flex-col md:flex-row gap-8 justify-center items-stretch">
-                
-                <!-- Bank Account (BRI) -->
-                <div class="card-hover bg-white p-8 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-2 border border-amber-100/50 text-center w-full md:w-1/2 flex flex-col justify-between relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-wedding-accent to-transparent opacity-50"></div>
-                    
-                    <div>
-                        <div class="w-16 h-16 mx-auto bg-gray-50 rounded-full flex items-center justify-center mb-6 shadow-inner">
-                            <i class="fa-solid fa-building-columns text-2xl text-wedding-accent"></i>
-                        </div>
-                        <p class="font-serif text-xl tracking-widest mb-4 text-gray-800 font-semibold">Bank BRI</p>
-                        <p id="rekening" class="text-2xl font-sans tracking-widest mb-2 text-gray-900 font-medium">002201049961506</p>
-                        <p class="text-gray-500 uppercase tracking-widest text-xs mb-8 font-sans">A.N. Susilo Wahyu Utomo</p>
-                    </div>
-                    
-                    <button 
-                        onclick="copyToClipboard('002201049961506', 'rek-btn', 'Salin Rekening')" 
-                        id="rek-btn" 
-                        class="btn-transition w-full py-3 rounded-xl border border-wedding-accent text-sm font-sans tracking-widest uppercase text-wedding-accent hover:bg-wedding-accent hover:text-white flex justify-center items-center gap-2">
-                        <i class="fa-regular fa-copy"></i>
-                        <span>Salin Rekening</span>
-                    </button>
+        <!-- Wedding Gift Section (Tanda Kasih) -->
+        <section class="py-24 px-6 bg-wedding-cream text-center border-t border-gray-200">
+            <div class="max-w-4xl mx-auto reveal">
+                <div class="mb-12">
+                    <i class="fa-solid fa-gift text-wedding-accent text-3xl mb-4"></i>
+                    <h2 class="font-playfair text-3xl md:text-4xl mb-4 tracking-wider uppercase text-gray-800">Tanda Kasih</h2>
+                    <div class="w-16 h-px bg-wedding-accent mx-auto mb-6"></div>
+                    <p class="text-wedding-text max-w-2xl mx-auto leading-relaxed font-poppins text-sm md:text-base font-light">
+                        Doa restu Anda merupakan karunia yang sangat berarti bagi kami. Namun, jika Anda hendak memberikan tanda kasih, Anda dapat melalui fitur di bawah ini:
+                    </p>
                 </div>
-                
-                <!-- Digital Wallet (DANA) -->
-                <div class="card-hover bg-white p-8 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-2 border border-amber-100/50 text-center w-full md:w-1/2 flex flex-col justify-between relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#118ee0] to-transparent opacity-30"></div>
-                    
-                    <div>
-                        <div class="w-16 h-16 mx-auto bg-gray-50 rounded-full flex items-center justify-center mb-6 shadow-inner">
-                            <i class="fa-solid fa-wallet text-2xl text-[#118ee0]"></i>
+
+                <!-- Bank Cards container -->
+                <div class="flex flex-col md:flex-row gap-8 justify-center items-stretch">
+                    <!-- Bank Account (MANDIRI) -->
+                    <div class="card-hover bg-white p-8 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-2 border border-amber-100/50 text-center w-full md:w-1/2 flex flex-col justify-between relative overflow-hidden mx-auto max-w-sm">
+                        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-wedding-accent to-transparent opacity-50"></div>
+                        
+                        <div>
+                            <div class="w-16 h-16 mx-auto bg-gray-50 rounded-full flex items-center justify-center mb-6 shadow-inner">
+                                <i class="fa-solid fa-building-columns text-2xl text-wedding-accent"></i>
+                            </div>
+                            <p class="font-playfair text-xl tracking-widest mb-4 text-gray-800 font-semibold">Bank MANDIRI</p>
+                            <p id="rekening" class="text-2xl font-poppins tracking-widest mb-2 text-gray-900 font-medium">1840002566105</p>
+                            <p class="text-gray-500 uppercase tracking-widest text-xs mb-8 font-poppins">A.N. Nita Natasya Angelina</p>
                         </div>
-                        <p class="font-serif text-xl tracking-widest mb-4 text-gray-800 font-semibold">DANA</p>
-                        <p id="ewallet" class="text-2xl font-sans tracking-widest mb-2 text-gray-900 font-medium">0895385501900</p>
-                        <p class="text-gray-500 uppercase tracking-widest text-xs mb-8 font-sans">A.N. Susilo Wahyu Utomo</p>
-                    </div>
-                    
-                    <button 
-                        onclick="copyToClipboard('0895385501900', 'ewallet-btn', 'Salin Nomor')" 
-                        id="ewallet-btn" 
-                        class="btn-transition w-full py-3 rounded-xl border border-[#118ee0] text-sm font-sans tracking-widest uppercase text-[#118ee0] hover:bg-[#118ee0] hover:text-white flex justify-center items-center gap-2">
-                        <i class="fa-regular fa-copy"></i>
-                        <span>Salin Nomor</span>
-                    </button>
+                        
+                        <button onclick="copyToClipboard('1840002566105', 'rek-btn', 'Salin Rekening')" id="rek-btn" class="btn-transition w-full py-3 rounded-xl border border-wedding-accent text-sm font-poppins tracking-widest uppercase text-wedding-accent hover:bg-wedding-accent hover:text-white flex justify-center items-center gap-2">
+                            <i class="fa-regular fa-copy"></i>
+                            <span>Salin Rekening</span>
+                        </button>
+                    </div>                
                 </div>
-                
             </div>
-        </div>
-    </section>
-
-    <script>
-        function copyToClipboard(textToCopy, buttonId, originalText) {
-            const btn = document.getElementById(buttonId);
-            const span = btn.querySelector('span');
-            const icon = btn.querySelector('i');
-            
-            // Simpan kelas lama untuk dikembalikan nanti
-            const originalClasses = btn.className;
-
-            // Logika fallback menggunakan eksekusi command jika clipboard API gagal (biasanya karena limitasi iFrame)
-            const copyFallback = () => {
-                const textArea = document.createElement("textarea");
-                textArea.value = textToCopy;
-                document.body.appendChild(textArea);
-                textArea.select();
-                try {
-                    document.execCommand('copy');
-                } catch (err) {
-                    console.error('Fallback copy gagal', err);
-                }
-                document.body.removeChild(textArea);
-            };
-
-            // Menyalin Teks
-            if (navigator.clipboard && window.isSecureContext) {
-                navigator.clipboard.writeText(textToCopy).catch(copyFallback);
-            } else {
-                copyFallback();
-            }
-
-            // Ubah gaya tombol menjadi Sukses (Hijau Lembut)
-            btn.className = "btn-transition w-full py-3 rounded-xl border border-green-500 bg-green-50 text-sm font-sans tracking-widest uppercase text-green-600 flex justify-center items-center gap-2 shadow-sm";
-            span.innerText = "Berhasil Disalin!";
-            icon.className = "fa-solid fa-check";
-
-            // Kembalikan tombol ke keadaan semula setelah 2 detik
-            setTimeout(() => {
-                btn.className = originalClasses;
-                span.innerText = originalText;
-                icon.className = "fa-regular fa-copy";
-            }, 2000);
-        }
-    </script>
-</body>
-</html>
-
+        </section>
 
         <!-- Guestbook & RSVP Section -->
         <section class="py-20 px-6 bg-gradient-to-b from-white via-blush-50/70 to-blush-100/50">
@@ -554,7 +616,7 @@
 
                 <!-- Form Card -->
                 <div class="glass-card p-6 sm:p-8 rounded-3xl shadow-xl border border-blush-200 mb-12 reveal-scale">
-                    <form id="guestbookForm" class="space-y-4">
+                    <form id="guestbookForm" class="space-y-4" onsubmit="window.submitGuestbookForm ? window.submitGuestbookForm(event) : submitForm(event)">
                         <div>
                             <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">Nama Lengkap</label>
                             <input type="text" id="guestNameInput" required placeholder="Masukkan nama Anda..." class="w-full px-4 py-3 rounded-2xl bg-white/80 border border-blush-200 focus:outline-none focus:ring-2 focus:ring-blush-400 text-sm text-gray-800">
@@ -575,361 +637,316 @@
                             <textarea id="messageInput" rows="4" required placeholder="Tuliskan pesan & doa untuk kedua mempelai..." class="w-full px-4 py-3 rounded-2xl bg-white/80 border border-blush-200 focus:outline-none focus:ring-2 focus:ring-blush-400 text-sm text-gray-800 resize-none"></textarea>
                         </div>
 
-                        <!-- Feedback Message Area -->
                         <div id="formFeedback" class="text-xs text-center font-medium hidden rounded-lg py-2"></div>
 
                         <button type="submit" id="submitBtn" class="w-full py-3.5 bg-gradient-to-r from-blush-500 to-blush-600 text-white font-medium rounded-2xl shadow-lg shadow-blush-300/50 hover:from-blush-600 hover:to-blush-700 transition-all duration-300 flex items-center justify-center gap-2 text-sm disabled:opacity-70 disabled:cursor-not-allowed">
-                            <i class="fas fa-paper-plane"></i> Kirim Ucapan
+                            Kirim Ucapan
                         </button>
                     </form>
                 </div>
-
-                <!-- Live Messages Display List -->
-                <div class="space-y-4 reveal" id="messagesContainer">
-                    <h3 class="text-sm font-semibold uppercase tracking-wider text-blush-800 mb-4 flex items-center gap-2">
-                        <i class="fas fa-comments"></i> <span>Daftar Ucapan Tamu</span>
-                    </h3>
-
-                    <!-- Wrapper for Dynamic Firebase Messages -->
-                    <div id="messagesList" class="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-                        <div class="flex justify-center items-center py-8">
-                            <i class="fas fa-spinner fa-spin text-blush-400 text-2xl"></i>
-                            <span class="ml-3 text-sm text-gray-500">Memuat ucapan...</span>
+                
+                <!-- Messages Display -->
+                <div class="reveal mt-12 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+                    <h3 class="font-serif text-xl font-semibold text-gray-800 mb-6 text-center border-b border-blush-200 pb-2">Daftar Ucapan</h3>
+                    <div id="messagesContainer" class="space-y-4">
+                        <div class="flex justify-center py-8">
+                            <i class="fas fa-circle-notch fa-spin text-blush-400 text-2xl"></i>
                         </div>
                     </div>
                 </div>
+                
+                <style>
+                    /* Custom scrollbar for messages */
+                    .custom-scrollbar::-webkit-scrollbar {
+                        width: 6px;
+                    }
+                    .custom-scrollbar::-webkit-scrollbar-track {
+                        background: rgba(255, 255, 255, 0.5);
+                        border-radius: 10px;
+                    }
+                    .custom-scrollbar::-webkit-scrollbar-thumb {
+                        background: #ebb8b8;
+                        border-radius: 10px;
+                    }
+                    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                        background: #df9292;
+                    }
+                </style>
             </div>
         </section>
-
+        
         <!-- Footer -->
-        <footer class="bg-white py-10 text-center border-t border-blush-100">
-            <div class="reveal">
-                <p class="font-serif italic text-gray-500 text-sm mb-4">Merupakan suatu kehormatan dan kebahagiaan bagi kami semua <br> apabila Bapak/Ibu/Saudara/i berkenan hadir untuk memberikan doa restu.</p>
-                <p class="font-script text-4xl text-blush-800 mb-2 mt-6">Susilo & Nita</p>
-                <p class="text-xs text-gray-400 mt-6 tracking-wider uppercase">Created with ♥</p>
-            </div>
+        <footer class="py-8 bg-blush-900 text-center">
+            <p class="text-blush-200 font-serif italic text-sm">Terima kasih atas doa dan restu Anda</p>
+            <h3 class="font-script text-3xl text-white mt-2">Nita & Susilo</h3>
         </footer>
-
     </main>
 
-    <!-- Lightbox Modal -->
-    <div id="lightbox" class="fixed inset-0 z-[99999] bg-black/95 hidden flex-col items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300 opacity-0">
-        <button onclick="closeLightbox()" class="absolute top-6 right-6 text-white/70 hover:text-white text-3xl transition-colors focus:outline-none">
-            <i class="fas fa-times"></i>
-        </button>
-        <img id="lightbox-img" src="" alt="Enlarged" class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl modal-enter">
+    <!-- Lightbox for Gallery -->
+    <div id="lightbox" class="fixed inset-0 z-[10000] bg-black/90 hidden flex items-center justify-center opacity-0" onclick="closeLightbox()">
+        <button class="absolute top-6 right-6 text-white text-3xl focus:outline-none hover:text-blush-400 transition-colors">&times;</button>
+        <img id="lightbox-img" src="" alt="Enlarged Image" class="max-w-[90%] max-h-[90vh] object-contain rounded-lg shadow-2xl scale-95 transition-transform duration-300">
     </div>
 
     <script>
-        // --- 1. Audio and Cover Logic ---
-        const bgMusic = document.getElementById('bgMusic');
-        const musicToggleBtn = document.getElementById('musicToggleBtn');
-        const musicIcon = document.getElementById('musicIcon');
-        let isPlaying = false;
-
-        function playAudio() {
-            // Optimistically update UI
-            isPlaying = true;
-            updateMusicUI();
-            
-            bgMusic.play().catch(error => {
-                // Tangkap error jika browser memblokir autoplay
-                isPlaying = false;
-                updateMusicUI();
-                console.log("Audio playback dicegah oleh browser:", error);
-            });
-        }
-
-        function pauseAudio() {
-            bgMusic.pause();
-            isPlaying = false;
-            updateMusicUI();
-        }
+        // --- 1. OPENING LOGIC & AUTO-SCROLL ---
+        let autoScrollActive = false;
+        let currentScrollY = 0;
+        let animationFrameId;
 
         function openInvitation() {
-            document.body.style.overflow = 'auto'; // allow scrolling
+            // Hide Overlay
             document.getElementById('opening-overlay').classList.add('opened');
+            document.body.style.overflowY = 'auto';
             
-            // Initiate Music
-            playAudio();
+            // Play Music
+            const music = document.getElementById('bgMusic');
+            music.play().catch(e => console.log("Autoplay blocked:", e));
+            
+            // Trigger scroll animations immediately
+            handleScrollReveal();
+            
+            // Start Auto Scroll slightly after opening
+            setTimeout(() => {
+                startAutoScroll();
+            }, 1000);
         }
 
+        function startAutoScroll() {
+            if (autoScrollActive) return; // Prevent multiple loops
+            autoScrollActive = true;
+            document.getElementById('scrollIcon').className = 'fas fa-pause';
+            
+            // Capture current scroll position reliably
+            currentScrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop;
+            
+            let lastTime = 0;
+            const pixelsPerSecond = 40; // Adjust speed here
+
+            function step(timestamp) {
+                if (!autoScrollActive) return;
+                
+                if (!lastTime) lastTime = timestamp;
+                const deltaTime = timestamp - lastTime;
+                
+                // Calculate scroll amount based on time passed for smooth cross-device speed
+                const scrollAmount = (pixelsPerSecond * deltaTime) / 1000;
+                currentScrollY += scrollAmount;
+                
+                // Use a more robust scrolling method
+                window.scrollTo({
+                    top: currentScrollY,
+                    behavior: 'instant' // Crucial for continuous rAF based scrolling
+                });
+                
+                lastTime = timestamp;
+                
+                // Stop automatically if we reach the bottom of the page
+                // Adjusted calculation for better mobile compatibility
+                const scrollHeight = Math.max(
+                    document.body.scrollHeight, document.documentElement.scrollHeight,
+                    document.body.offsetHeight, document.documentElement.offsetHeight,
+                    document.body.clientHeight, document.documentElement.clientHeight
+                );
+                
+                if (window.innerHeight + currentScrollY >= scrollHeight - 10) {
+                    autoScrollActive = false;
+                    document.getElementById('scrollIcon').className = 'fas fa-play';
+                    return;
+                }
+                
+                animationFrameId = requestAnimationFrame(step);
+            }
+            
+            animationFrameId = requestAnimationFrame(step);
+        }
+
+        function toggleAutoScroll() {
+            if (autoScrollActive) {
+                autoScrollActive = false;
+                cancelAnimationFrame(animationFrameId);
+                document.getElementById('scrollIcon').className = 'fas fa-play';
+            } else {
+                startAutoScroll();
+            }
+        }
+
+        // Handle user interference gracefully
+        let scrollTimeout;
+        
+        function pauseAutoScrollTemporarily() {
+             if(autoScrollActive) {
+                 // Update the current scroll position so it doesn't jump back
+                 currentScrollY = window.scrollY || window.pageYOffset;
+                 
+                 // Clear previous timeout
+                 clearTimeout(scrollTimeout);
+                 
+                 // Pause visually
+                 autoScrollActive = false;
+                 cancelAnimationFrame(animationFrameId);
+                 document.getElementById('scrollIcon').className = 'fas fa-play';
+                 
+                 // Optional: Automatically resume after a delay if desired
+                 // Un-comment the next lines to auto-resume
+                 /*
+                 scrollTimeout = setTimeout(() => {
+                     startAutoScroll();
+                 }, 3000); // Resume after 3 seconds of inactivity
+                 */
+             }
+        }
+
+        // Listen for standard wheel scrolling
+        window.addEventListener('wheel', pauseAutoScrollTemporarily, { passive: true });
+        
+        // Listen for touch start to pause immediately
+        window.addEventListener('touchstart', pauseAutoScrollTemporarily, { passive: true });
+        
+        // Listen for touch move just in case
+        window.addEventListener('touchmove', pauseAutoScrollTemporarily, { passive: true });
+
+
+        // --- 2. MUSIC TOGGLE ---
         function toggleMusic() {
-            if (isPlaying) {
-                pauseAudio();
+            const music = document.getElementById('bgMusic');
+            const icon = document.getElementById('musicIcon');
+            
+            if (music.paused) {
+                music.play();
+                icon.className = 'fas fa-music';
             } else {
-                playAudio();
+                music.pause();
+                icon.className = 'fas fa-volume-mute';
             }
         }
 
-        function updateMusicUI() {
-            if (isPlaying) {
-                musicIcon.className = 'fas fa-compact-disc'; // spinning disc icon
-                musicToggleBtn.classList.add('animate-spin-slow');
-                musicToggleBtn.classList.add('text-blush-600');
-                musicToggleBtn.classList.remove('text-gray-400');
+        // --- 3. COPY CLIPBOARD (REKENING) ---
+        function copyToClipboard(textToCopy, buttonId, originalText) {
+            const btn = document.getElementById(buttonId);
+            const span = btn.querySelector('span');
+            const icon = btn.querySelector('i');
+            
+            const originalClasses = btn.className;
+
+            const copyFallback = () => {
+                const textArea = document.createElement("textarea");
+                textArea.value = textToCopy;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                } catch (err) {}
+                document.body.removeChild(textArea);
+            };
+
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(textToCopy).catch(copyFallback);
             } else {
-                musicIcon.className = 'fas fa-play';
-                musicToggleBtn.classList.remove('animate-spin-slow');
-                musicToggleBtn.classList.remove('text-blush-600');
-                musicToggleBtn.classList.add('text-gray-400');
+                copyFallback();
             }
+
+            btn.className = "btn-transition w-full py-3 rounded-xl border border-green-500 bg-green-50 text-sm font-poppins tracking-widest uppercase text-green-600 flex justify-center items-center gap-2 shadow-sm";
+            span.innerText = "Tersalin!";
+            icon.className = "fa-solid fa-check";
+
+            setTimeout(() => {
+                btn.className = originalClasses;
+                span.innerText = originalText;
+                icon.className = "fa-regular fa-copy";
+            }, 2500);
         }
 
-        // Initially disable scroll
-        document.body.style.overflow = 'hidden';
-        
-        // --- 2. Countdown Logic ---
-        const weddingDate = new Date('October 25, 2026 09:00:00').getTime();
+        // --- 4. SCROLL REVEAL ANIMATIONS ---
+        function handleScrollReveal() {
+            const reveals = document.querySelectorAll('.reveal, .reveal-scale');
+            const windowHeight = window.innerHeight;
+            const elementVisible = 100;
 
-        const updateCountdown = () => {
-            const now = new Date().getTime();
-            const distance = weddingDate - now;
-
-            if (distance < 0) {
-                document.getElementById('countdown').innerHTML = '<div class="text-2xl font-serif font-bold text-blush-600 bg-blush-50 px-8 py-4 rounded-2xl w-full">Acara Sedang Berlangsung / Telah Selesai</div>';
-                return;
-            }
-
-            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-            const format = num => num < 10 ? `0${num}` : num;
-
-            document.getElementById('countdown').innerHTML = `
-                <div class="flex flex-col items-center w-16 sm:w-20"><div class="text-2xl sm:text-4xl font-serif font-bold text-gray-800 bg-blush-50 w-full rounded-2xl py-3 shadow-inner border border-white">${format(days)}</div><span class="text-[10px] sm:text-xs uppercase mt-2 font-medium text-gray-500">Hari</span></div>
-                <div class="flex flex-col items-center w-16 sm:w-20"><div class="text-2xl sm:text-4xl font-serif font-bold text-gray-800 bg-blush-50 w-full rounded-2xl py-3 shadow-inner border border-white">${format(hours)}</div><span class="text-[10px] sm:text-xs uppercase mt-2 font-medium text-gray-500">Jam</span></div>
-                <div class="flex flex-col items-center w-16 sm:w-20"><div class="text-2xl sm:text-4xl font-serif font-bold text-gray-800 bg-blush-50 w-full rounded-2xl py-3 shadow-inner border border-white">${format(minutes)}</div><span class="text-[10px] sm:text-xs uppercase mt-2 font-medium text-gray-500">Menit</span></div>
-                <div class="flex flex-col items-center w-16 sm:w-20"><div class="text-2xl sm:text-4xl font-serif font-bold text-gray-800 bg-blush-50 w-full rounded-2xl py-3 shadow-inner border border-white">${format(seconds)}</div><span class="text-[10px] sm:text-xs uppercase mt-2 font-medium text-gray-500">Detik</span></div>
-            `;
-        };
-        setInterval(updateCountdown, 1000);
-        updateCountdown();
-
-        // --- 3. Scroll Reveal Logic ---
-        const revealElements = document.querySelectorAll('.reveal, .reveal-scale');
-        
-        const revealObserver = new IntersectionObserver((entries, observer) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('active');
-                    observer.unobserve(entry.target); // Only animate once
+            reveals.forEach(reveal => {
+                const elementTop = reveal.getBoundingClientRect().top;
+                if (elementTop < windowHeight - elementVisible) {
+                    reveal.classList.add('active');
                 }
             });
-        }, { root: null, threshold: 0.15, rootMargin: '0px 0px -50px 0px' });
+        }
+        window.addEventListener('scroll', handleScrollReveal);
 
-        revealElements.forEach(el => revealObserver.observe(el));
-
-        // --- 4. Lightbox Logic ---
-        const lightbox = document.getElementById('lightbox');
-        const lightboxImg = document.getElementById('lightbox-img');
-
-        function openLightbox(src) {
-            lightboxImg.src = src;
-            lightbox.classList.remove('hidden');
-            lightbox.classList.add('flex');
+        // --- 5. COUNTDOWN TIMER ---
+        const weddingDate = new Date("Oct 25, 2026 09:00:00").getTime();
+        
+        setInterval(function() {
+            const now = new Date().getTime();
+            const distance = weddingDate - now;
             
-            // Add a tiny delay to allow display block to apply before changing opacity for smooth fade in
+            if(distance < 0) return; // If date passed, leave at 00
+
+            document.getElementById("days").innerText = String(Math.floor(distance / (1000 * 60 * 60 * 24))).padStart(2, '0');
+            document.getElementById("hours").innerText = String(Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))).padStart(2, '0');
+            document.getElementById("minutes").innerText = String(Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
+            document.getElementById("seconds").innerText = String(Math.floor((distance % (1000 * 60)) / 1000)).padStart(2, '0');
+        }, 1000);
+
+        // --- 6. LIGHTBOX GALLERY ---
+        function openLightbox(imgSrc) {
+            const lightbox = document.getElementById('lightbox');
+            const img = document.getElementById('lightbox-img');
+            img.src = imgSrc;
+            lightbox.classList.remove('hidden');
+            
+            // Add slight delay for animation
             setTimeout(() => {
                 lightbox.classList.remove('opacity-0');
-                lightbox.classList.add('opacity-100');
-                lightboxImg.classList.add('modal-enter-active');
+                img.classList.remove('scale-95');
+                img.classList.add('scale-100');
             }, 10);
             
-            document.body.style.overflow = 'hidden';
+            // Pause autoscroll when viewing image
+            if(autoScrollActive) toggleAutoScroll();
         }
 
         function closeLightbox() {
-            lightbox.classList.remove('opacity-100');
+            const lightbox = document.getElementById('lightbox');
+            const img = document.getElementById('lightbox-img');
             lightbox.classList.add('opacity-0');
-            lightboxImg.classList.remove('modal-enter-active');
+            img.classList.remove('scale-100');
+            img.classList.add('scale-95');
             
             setTimeout(() => {
                 lightbox.classList.add('hidden');
-                lightbox.classList.remove('flex');
-                document.body.style.overflow = 'auto';
-            }, 300); // match transition duration
-        }
-        
-        // Close lightbox on outside click
-        lightbox.addEventListener('click', (e) => {
-            if(e.target === lightbox) closeLightbox();
-        });
-    </script>
-
-<!-- Firebase SDK Compat (Lebih fleksibel untuk preview lokal) -->
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-
-<script>
-  // 1. Ganti Konfigurasi dengan milik Anda
-const firebaseConfig = {
-  apiKey: "AIzaSyD9sRNMfSvCOrYHoREpMwcGVak3IT37W78",
-  authDomain: "website-undangan-25423.firebaseapp.com",
-  projectId: "website-undangan-25423",
-  storageBucket: "website-undangan-25423.firebasestorage.app",
-  messagingSenderId: "91760885667",
-  appId: "1:91760885667:web:abca0822da4978271aa416",
-  measurementId: "G-240WP4XXFF"
-};
-
-
-  // Inisialisasi Firebase
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-  const guestbookCollection = db.collection("guestbook");
-
-  // DOM Elements
-  const form = document.getElementById("guestbookForm");
-  const nameInput = document.getElementById("guestNameInput");
-  const attendanceInput = document.getElementById("attendanceInput");
-  const messageInput = document.getElementById("messageInput");
-  const submitBtn = document.getElementById("submitBtn");
-  const formFeedback = document.getElementById("formFeedback");
-  const messagesList = document.getElementById("messagesList");
-
-  // Kirim data saat form di-submit
-  form.addEventListener("submit", function (e) {
-    e.preventDefault();
-
-    const name = nameInput.value.trim();
-    const attendance = attendanceInput.value;
-    const message = messageInput.value.trim();
-
-    if (!name || !attendance || !message) return;
-
-    // Loading State
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengirim...';
-    formFeedback.classList.add("hidden");
-
-    // Simpan Ke Firestore
-    guestbookCollection.add({
-      name: name,
-      attendance: attendance,
-      message: message,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    })
-    .then(function () {
-      form.reset();
-      formFeedback.textContent = "Terima kasih! Ucapan & doa Anda telah terkirim.";
-      formFeedback.className = "text-xs text-center font-medium rounded-lg py-2 bg-green-100 text-green-700 block mb-4";
-      setTimeout(() => formFeedback.classList.add("hidden"), 5000);
-    })
-    .catch(function (error) {
-      console.error("Error:", error);
-      formFeedback.textContent = "Gagal mengirim ucapan. Periksa koneksi/Rules Firestore.";
-      formFeedback.className = "text-xs text-center font-medium rounded-lg py-2 bg-red-100 text-red-700 block mb-4";
-    })
-    .finally(function () {
-      submitBtn.disabled = false;
-      submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Kirim Ucapan';
-    });
-  });
-
-  // Ambil Data Real-time
-  guestbookCollection.orderBy("createdAt", "desc").onSnapshot(
-    function (snapshot) {
-      if (snapshot.empty) {
-        messagesList.innerHTML = `
-          <div class="text-center py-8">
-              <span class="text-sm text-gray-500">Belum ada ucapan. Jadilah yang pertama!</span>
-          </div>
-        `;
-        return;
-      }
-
-      let cardsHTML = "";
-      snapshot.forEach(function (doc) {
-        const data = doc.data();
-
-        let badgeStyle = "bg-green-100 text-green-700";
-        if (data.attendance === "Tidak Hadir") {
-          badgeStyle = "bg-red-100 text-red-700";
-        } else if (data.attendance === "Masih Ragu") {
-          badgeStyle = "bg-yellow-100 text-yellow-700";
+            }, 300);
         }
 
-        let timeString = "Baru saja";
-        if (data.createdAt) {
-          const date = data.createdAt.toDate();
-          timeString = date.toLocaleDateString("id-ID", {
-            day: "numeric",
-            month: "short",
-            hour: "2-digit",
-            minute: "2-digit"
-          });
-        }
-
-        cardsHTML += `
-          <div class="p-5 rounded-2xl bg-white border border-blush-100 shadow-sm transition-all hover:shadow-md mb-3">
-              <div class="flex items-center justify-between mb-2">
-                  <span class="font-bold text-sm text-gray-800">${escapeHtml(data.name)}</span>
-                  <span class="text-[10px] px-2 py-0.5 rounded-full ${badgeStyle} font-medium">${escapeHtml(data.attendance)}</span>
-              </div>
-              <p class="text-xs text-gray-600 leading-relaxed">"${escapeHtml(data.message)}"</p>
-              <span class="text-[10px] text-gray-400 block mt-2">${timeString}</span>
-          </div>
-        `;
-      });
-
-      messagesList.innerHTML = cardsHTML;
-    },
-    function (error) {
-      console.error("Firestore error:", error);
-      messagesList.innerHTML = `
-        <div class="text-center py-8">
-            <span class="text-sm text-red-500">Gagal memuat ucapan (Cek aturan/Rules Firestore Anda).</span>
-        </div>
-      `;
-    }
-  );
-
-  function escapeHtml(text) {
-    if (!text) return "";
-    return text
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-  }
-</script>
-<script>
-        // Deklarasi variabel
-        const audio = document.getElementById("bgMusic");
-        const musicIcon = document.getElementById("musicIcon");
-        let isMusicPlaying = false;
-
-        // Fungsi untuk membuka undangan dan memutar musik
-        function openInvitation() {
-            // Sembunyikan sampul depan
-            document.getElementById("opening-overlay").classList.add("opened");
+        // --- 7. FORM SUBMISSION (Dummy - Fallback if Firebase fails) ---
+        function submitForm(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            const feedback = document.getElementById('formFeedback');
             
-            // Putar musik
-            audio.play().then(() => {
-                isMusicPlaying = true;
-                // Ubah ikon menjadi animasi berputar jika pakai FontAwesome
-                musicIcon.classList.add("fa-spin"); 
-            }).catch((error) => {
-                console.log("Autoplay diblokir oleh browser", error);
-            });
-        }
-
-        // Fungsi untuk tombol melayang (pause/play)
-        function toggleMusic() {
-            if (isMusicPlaying) {
-                audio.pause();
-                musicIcon.classList.remove("fa-spin");
-            } else {
-                audio.play();
-                musicIcon.classList.add("fa-spin");
-            }
-            isMusicPlaying = !isMusicPlaying;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Mengirim...';
+            
+            // Simulate network request
+            setTimeout(() => {
+                btn.classList.replace('from-blush-500', 'from-green-500');
+                btn.classList.replace('to-blush-600', 'to-green-600');
+                btn.innerHTML = '<i class="fas fa-check"></i> Terkirim (Demo)';
+                
+                feedback.classList.remove('hidden', 'bg-red-100', 'text-red-600');
+                feedback.classList.add('bg-green-100', 'text-green-700');
+                feedback.innerText = "Terima kasih atas ucapan dan doanya! (Firebase belum dikonfigurasi)";
+                
+                document.getElementById('guestbookForm').reset();
+                
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.classList.replace('from-green-500', 'from-blush-500');
+                    btn.classList.replace('to-green-600', 'to-blush-600');
+                    btn.innerHTML = 'Kirim Ucapan';
+                    feedback.classList.add('hidden');
+                }, 3000);
+            }, 1500);
         }
     </script>
-</body>
 </body>
 </html>
